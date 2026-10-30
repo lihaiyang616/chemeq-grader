@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}设置 · ChemEq 智批{% endblock %}
+{% block content %}
+<h1>设置</h1>
+<p class="lead">模型、Key、手机入口和数据目录都在这里。</p>
+
+<section class="split">
+  <form class="panel form" method="post" action="/settings">
+    <h2>模型</h2>
+    <label>模型名
+      <input name="model" value="{{ public.model }}" placeholder="deepseek-flash">
+    </label>
+    <label>Base URL
+      <input name="base_url" value="{{ public.base_url }}" placeholder="https://api.deepseek.com">
+    </label>
+    <label>API Key
+      <input name="api_key" type="password" autocomplete="off"
+             placeholder="{% if public.has_api_key %}已保存：{{ public.api_key }}（留空不修改）{% else %}粘贴 DeepSeek/智谱 API Key{% endif %}">
+    </label>
+    <label class="checkbox">
+      <input type="checkbox" name="strict_scoring" value="1" {% if public.strict_scoring %}checked{% endif %}>
+      严格评分：只要有一点错就是 0 分（老师要求）
+    </label>
+    <div class="form-actions">
+      <button class="button primary" type="submit">保存设置</button>
+    </div>
+    <p class="muted small">保存后下一份批改生效。修改模型/Key 不需要重启程序。</p>
+  </form>
+
+  <div class="panel">
+    <h2>连接测试</h2>
+    <form method="post" action="/settings/test" class="inline">
+      <button class="button" type="submit">测试当前模型</button>
+    </form>
+    <p class="muted small">测试只发一句文本，不传学生图片，花费可以忽略。</p>
+    <hr>
+    <h2>手机入口</h2>
+    <div class="mobile-url">{{ mobile_url }}</div>
+    <p class="muted small">电脑和手机连同一个 Wi-Fi。若手机打不开：先允许 Windows 防火墙，或把电脑连到手机热点。</p>
+    <h2>数据目录</h2>
+    <div class="mobile-url">{{ public.data_dir }}</div>
+    <p class="muted small">备份整个目录即可迁移；删除作业会同时删除对应图片。</p>
+    <h2>令牌</h2>
+    <p class="muted small">手机令牌：<code>{{ public.mobile_token }}</code></p>
+    <p class="muted small">本机管理令牌：<code>{{ public.admin_token }}</code></p>
+  </div>
+</section>
+
+<section class="panel">
+  <h2>成本与隐私</h2>
+  <p class="muted">按 DeepSeek 当前价估算：一页 5 道方程式约 0.002 元；40 页约 0.07–0.15 元（夜间更便宜）。实际以账单为准。</p>
+  <p class="muted">识别时会把压缩后的作业图片发给所配置的模型服务（默认 DeepSeek）。原图、成绩和名单只存在这台电脑。首次使用请确认学校/家长允许云端识别；如需完全离线，可在设置里改用本地 Ollama 的 OpenAI 兼容地址。</p>
+</section>
+{% endblock %}

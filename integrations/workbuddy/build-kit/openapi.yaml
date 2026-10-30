@@ -1,0 +1,142 @@
+openapi: 3.1.0
+info:
+  title: ChemEq Grader mobile API
+  version: 0.1.0
+  description: |
+    本地化学方程式批改服务的手机端接口。手机令牌在电脑端首页/设置里显示。
+    `same_student=true` 时，所有 files 合成一份多页作业；否则每张照片算一位学生。
+servers:
+  - url: http://192.168.1.10:8765
+    description: 老师电脑的局域网地址（以实际二维码为准）
+paths:
+  /m/{token}:
+    get:
+      summary: 手机上传页
+      parameters:
+        - $ref: '#/components/parameters/token'
+      responses:
+        '200':
+          description: HTML 页面
+  /m/{token}/worksheets:
+    get:
+      summary: 作业列表
+      parameters:
+        - $ref: '#/components/parameters/token'
+      responses:
+        '200':
+          description: 作业列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: integer }
+                        title: { type: string }
+                        class_name: { type: string }
+  /m/{token}/upload:
+    post:
+      summary: 上传学生作业照片
+      parameters:
+        - $ref: '#/components/parameters/token'
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [worksheet_id, files]
+              properties:
+                worksheet_id: { type: integer }
+                same_student:
+                  type: boolean
+                  description: true = 这些照片是同一位学生的多页
+                files:
+                  type: array
+                  items: { type: string, format: binary }
+      responses:
+        '200':
+          description: 已入队
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  submission_ids:
+                    type: array
+                    items: { type: integer }
+                  created: { type: integer }
+        '400':
+          description: 图片格式/大小/作业不存在
+  /m/{token}/status:
+    get:
+      summary: 查询批改状态
+      parameters:
+        - $ref: '#/components/parameters/token'
+        - name: ids
+          in: query
+          schema: { type: string }
+          description: 逗号分隔的 submission id
+      responses:
+        '200':
+          description: 状态列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: integer }
+                        status:
+                          type: string
+                          enum: [queued, processing, graded, needs_review, confirmed, failed, interrupted]
+                        score: { type: [number, 'null'] }
+                        max_score: { type: number }
+                        needs_review: { type: boolean }
+                        student: { type: string }
+                        error: { type: string }
+  /worksheets/{id}/report:
+    get:
+      summary: 老师端学情报告（仅本机访问）
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: 可打印 HTML
+          content:
+            text/html: { schema: { type: string } }
+  /worksheets/{id}/export.xlsx:
+    get:
+      summary: 老师端 Excel 报告（仅本机访问）
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: xlsx 文件
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema: { type: string, format: binary }
+components:
+  parameters:
+    token:
+      name: token
+      in: path
+      required: true
+      schema: { type: string }
+      description: 电脑端显示的手机令牌

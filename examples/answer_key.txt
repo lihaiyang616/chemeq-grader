@@ -1,0 +1,5 @@
+1 | 2H2 + O2 --点燃--> 2H2O | 2
+2 | 2KClO3 --MnO2,Δ--> 2KCl + 3O2↑ | 2
+3 | Fe + CuSO4 → FeSO4 + Cu | 2
+4 | NaOH + HCl → NaCl + H2O | 2
+5 | CaCO3 --高温--> CaO + CO2↑ | 2

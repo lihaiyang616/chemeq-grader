@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "chemeq": {
+      "type": "stdio",
+      "command": "C:\\Users\\<you>\\AppData\\Local\\ChemEq\\bin\\chemeq.exe",
+      "args": ["mcp"]
+    }
+  }
+}

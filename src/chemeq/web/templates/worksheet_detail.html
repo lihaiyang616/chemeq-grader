@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}{{ worksheet.title }} · ChemEq 智批{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <p class="crumb"><a href="/">作业</a> / {{ worksheet.title }}</p>
+    <h1>{{ worksheet.title }}</h1>
+    <p class="muted">{{ worksheet.class_name or '未填班级' }} · {{ questions|length }} 道方程式题 · 严格评分（错一题 0 分）</p>
+  </div>
+  <div class="actions">
+    <a class="button" href="/worksheets/{{ worksheet.id }}/export.xlsx">导出 Excel</a>
+    <a class="button" href="/worksheets/{{ worksheet.id }}/report" target="_blank">打印学情报告</a>
+    <a class="button ghost" href="/worksheets/new">再建一份</a>
+  </div>
+</section>
+
+<section class="stats">
+  <div class="stat"><div class="num">{{ summary.student_count }}</div><div class="label">提交份数</div></div>
+  <div class="stat"><div class="num">{{ summary.graded_count }}</div><div class="label">已批改</div></div>
+  <div class="stat"><div class="num">{{ summary.average }}</div><div class="label">平均分 / {{ summary.max_score }}</div></div>
+  <div class="stat"><div class="num">{{ summary.pass_rate }}%</div><div class="label">及格率</div></div>
+  <div class="stat"><div class="num">{{ summary.needs_review }}</div><div class="label">待复核</div></div>
+</section>
+
+<div class="split">
+  <section class="panel">
+    <h2>手机上传</h2>
+    <div class="qr-wrap">
+      <img class="qr" src="/worksheets/{{ worksheet.id }}/qr.png" alt="手机上传二维码">
+      <div>
+        <p>手机扫码即可拍照/选图；电脑和手机要连同一个 Wi-Fi。</p>
+        <div class="mobile-url">{{ mobile_url }}</div>
+        <p class="muted small">扫码后选择这份作业。多页作业请勾选“同一学生的多页”。</p>
+      </div>
+    </div>
+  </section>
+  <section class="panel">
+    <h2>答案与规则</h2>
+    <table class="compact">
+      <thead><tr><th>题号</th><th>标准答案</th><th>分值</th></tr></thead>
+      <tbody>
+        {% for question in questions %}
+        <tr>
+          <td>{{ question.qno }}</td>
+          <td class="eq">{{ question.answer_eq }}</td>
+          <td>{{ question.max_score }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p class="muted small">AI 只转写；配平/电荷/条件/状态由程序判定。老师可逐题改分并确认。</p>
+  </section>
+</div>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>学生提交</h2>
+    <span class="muted small">共 {{ submissions|length }} 份</span>
+  </div>
+  {% if submissions %}
+  <table>
+    <thead><tr><th>#</th><th>学生</th><th>学号</th><th>页数</th><th>得分</th><th>错题</th><th>状态</th><th></th></tr></thead>
+    <tbody>
+      {% for submission in submissions %}
+      <tr>
+        <td>{{ submission.id }}</td>
+        <td>{{ submission.student_name or submission.student_name_raw or '未识别' }}</td>
+        <td>{{ submission.student_no or submission.student_no_raw or '' }}</td>
+        <td>{{ submission.page_count }}</td>
+        <td>{{ submission.score if submission.score is not none else '-' }}</td>
+        <td>{{ submission.wrong_count }}</td>
+        <td><span class="badge {{ submission.status }}">{{ submission.status }}</span></td>
+        <td><a class="button small" href="/submissions/{{ submission.id }}">复核</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">还没有学生照片。用手机扫码上传，或把照片放进一个文件夹后用 <code>chemeq grade</code> 批改。</p>
+  {% endif %}
+</section>
+
+{% if summary.need_fix %}
+<section class="panel">
+  <h2>需订正名单</h2>
+  <table class="compact">
+    <thead><tr><th>学号</th><th>姓名</th><th>得分</th><th>错题号</th></tr></thead>
+    <tbody>
+      {% for row in summary.need_fix %}
+      <tr><td>{{ row.no }}</td><td>{{ row.student }}</td><td>{{ row.score }}</td><td>{{ row.wrong_qnos|join('、') }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+{% endblock %}

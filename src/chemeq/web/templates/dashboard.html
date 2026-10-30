@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}作业 · ChemEq 智批{% endblock %}
+{% block content %}
+<section class="hero">
+  <div>
+    <h1>化学方程式拍照批改</h1>
+    <p class="lead">手机拍 → AI 只认字 → 程序判配平/电荷/条件/状态 → 按姓名/学号登记错题 → 导出 Excel 与订正名单。</p>
+  </div>
+  <div class="hero-actions">
+    <a class="button primary" href="/worksheets/new">新建作业</a>
+    <form method="post" action="/demo" class="inline">
+      <button class="button" type="submit">生成示例数据</button>
+    </form>
+  </div>
+</section>
+
+{% if not has_key %}
+<div class="notice warn">
+  还没有填写 API Key。批改前请到 <a href="/settings">设置</a> 填写 DeepSeek/智谱 Key，并点“测试连接”。
+</div>
+{% endif %}
+
+<section class="stats">
+  <div class="stat"><div class="num">{{ counts.worksheets }}</div><div class="label">作业</div></div>
+  <div class="stat"><div class="num">{{ counts.submissions }}</div><div class="label">学生提交</div></div>
+  <div class="stat"><div class="num">{{ counts.pending }}</div><div class="label">待处理/待复核</div></div>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>作业列表</h2>
+    <a class="muted" href="/worksheets/new">＋ 新建</a>
+  </div>
+  {% if worksheets %}
+  <table>
+    <thead><tr><th>作业</th><th>班级</th><th>题数</th><th>提交</th><th>待处理</th><th></th></tr></thead>
+    <tbody>
+      {% for worksheet in worksheets %}
+      <tr>
+        <td><a href="/worksheets/{{ worksheet.id }}"><strong>{{ worksheet.title }}</strong></a></td>
+        <td>{{ worksheet.class_name }}</td>
+        <td>{{ worksheet.question_count }}</td>
+        <td>{{ worksheet.submission_count }}</td>
+        <td>{{ worksheet.pending_count }}</td>
+        <td class="actions">
+          <a class="button small" href="/worksheets/{{ worksheet.id }}">打开</a>
+          <a class="button small ghost" href="/worksheets/{{ worksheet.id }}/export.xlsx">Excel</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">还没有作业。点“新建作业”粘贴标准答案，或先生成示例数据看看界面。</p>
+  {% endif %}
+</section>
+
+<section class="split">
+  <div class="panel">
+    <h2>手机上传</h2>
+    <p class="muted">电脑和手机连同一个 Wi-Fi；用手机扫码或打开下面的地址。</p>
+    <div class="mobile-url">{{ mobile_url }}</div>
+    <p class="muted small">当前局域网 IP：{{ lan }}。如果手机打不开，见“设置”里的网络提示。</p>
+  </div>
+  <div class="panel">
+    <h2>最近事件</h2>
+    {% if events %}
+    <ul class="events">
+      {% for event in events %}
+      <li><span class="tag {{ event.level }}">{{ event.level }}</span> {{ event.message }} <span class="muted small">{{ event.created_at }}</span></li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="muted">暂无记录。</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

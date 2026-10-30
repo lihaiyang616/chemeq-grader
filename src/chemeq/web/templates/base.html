@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}ChemEq 智批{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/">ChemEq <span>智批</span></a>
+    <nav>
+      <a href="/">作业</a>
+      <a href="/worksheets/new">新建作业</a>
+      <a href="/students">学生名单</a>
+      <a href="/settings">设置</a>
+    </nav>
+  </header>
+  <main class="container">
+    {% if msg %}<div class="flash">{{ msg }}</div>{% endif %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="footer">
+    <span>AI 只负责转写，配平/条件/状态由程序校验；老师复核后再作为最终成绩。</span>
+  </footer>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

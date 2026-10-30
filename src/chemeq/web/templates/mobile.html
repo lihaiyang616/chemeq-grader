@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>上传作业 · ChemEq 智批</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="mobile-body" data-token="{{ token }}">
+  <header class="mobile-header">
+    <div class="mobile-brand">ChemEq <span>智批</span></div>
+    <div class="mobile-hint">手机拍照/选图，直接传到电脑</div>
+  </header>
+  <main class="mobile-main">
+    {% if not worksheets %}
+    <div class="mobile-card">
+      <h2>还没有作业</h2>
+      <p>请先在电脑上新建一份作业，再回来拍照。</p>
+    </div>
+    {% else %}
+    <form id="upload-form" class="mobile-card">
+      <label class="mobile-label">这次批改哪份作业
+        <select id="worksheet-select" name="worksheet_id">
+          {% for worksheet in worksheets %}
+          <option value="{{ worksheet.id }}" {% if selected == worksheet.id %}selected{% endif %}>
+            {{ worksheet.title }}（{{ worksheet.class_name or '未填班级' }}）
+          </option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <label class="mobile-label">学生的照片（可多选）
+        <input id="files" type="file" accept="image/*" multiple>
+      </label>
+      <div class="mobile-file-hint" id="file-count">还没有选择照片</div>
+
+      <label class="mobile-check">
+        <input id="same-student" type="checkbox">
+        这些是同一位学生的多页
+      </label>
+      <p class="mobile-note">不勾选时：每张照片算一位学生。勾选后：所有照片合成一份多页作业。</p>
+
+      <button id="upload-button" class="mobile-button" type="submit">上传并开始批改</button>
+      <div id="upload-message" class="mobile-message"></div>
+    </form>
+
+    <section class="mobile-card">
+      <div class="mobile-status-head">
+        <h2>批改状态</h2>
+        <button id="refresh" class="mobile-link" type="button">刷新</button>
+      </div>
+      <div id="status-list" class="mobile-status-list">
+        <p class="muted">上传后这里会显示每份作业的进度。</p>
+      </div>
+    </section>
+    {% endif %}
+  </main>
+  <footer class="mobile-footer">同名/学号会自动匹配；认不清时电脑上会提示老师确认。</footer>
+  <script src="/static/mobile.js"></script>
+</body>
+</html>

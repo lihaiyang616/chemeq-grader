@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}新建作业 · ChemEq 智批{% endblock %}
+{% block content %}
+<h1>新建作业</h1>
+<p class="lead">把标准答案逐行粘贴进来。程序只批改方程式题；非方程式题可以留在卷面上，不影响报告。</p>
+
+{% if warnings %}
+<div class="notice warn">
+  <strong>需要先修正：</strong>
+  <ul>{% for warning in warnings %}<li>{{ warning }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+
+<form method="post" action="/worksheets/new" class="panel form">
+  <label>作业名称
+    <input name="title" required value="{{ title or '' }}" placeholder="例如：钠及其化合物小测">
+  </label>
+  <label>班级
+    <input name="class_name" value="{{ class_name or '' }}" placeholder="例如：高三(2)班">
+  </label>
+  <label>标准答案（每行一题）
+    <textarea id="answers" name="answers" rows="16" required placeholder="1. 4Na + O2 → 2Na2O
+2. 2Na + 2H2O → 2NaOH + H2↑ | 2
+(3) H2(g) + 1/2O2(g) → H2O(l) ΔH = -285.8 kJ/mol | 2">{{ answers_text }}</textarea>
+  </label>
+  <div class="hint">
+    <p>格式：<code>题号. 方程式</code> 或 <code>题号 | 方程式 | 分值</code>。同一题有多个可接受答案时用 <code>；</code> 分隔。</p>
+    <p>支持化学方程式、离子方程式（Fe3+ + 3OH- → Fe(OH)3↓）、热化学方程式（ΔH = -285.8 kJ/mol）和常见有机 condensed 式（CH3COOH + C2H5OH ⇌ …）。</p>
+    <p>老师要求“出错就不给分”：任何错误都是 0 分，但报告会写清错因。</p>
+  </div>
+  <div class="docx-import">
+    <label class="file-label">从 Word 答案提取候选行
+      <input type="file" id="docx-file" accept=".docx">
+    </label>
+    <button type="button" class="button" id="docx-extract">提取到上面</button>
+    <span id="docx-status" class="muted small"></span>
+  </div>
+  <div class="form-actions">
+    <button class="button primary" type="submit">创建作业</button>
+    <a class="button ghost" href="/">取消</a>
+  </div>
+</form>
+{% endblock %}
+{% block scripts %}
+<script>
+const docxInput = document.getElementById('docx-file');
+const extractButton = document.getElementById('docx-extract');
+const status = document.getElementById('docx-status');
+extractButton.addEventListener('click', async () => {
+  if (!docxInput.files.length) { status.textContent = '先选择一个 .docx 文件'; return; }
+  const body = new FormData();
+  body.append('file', docxInput.files[0]);
+  status.textContent = '提取中…';
+  try {
+    const response = await fetch('/api/answer-key/extract', { method: 'POST', body });
+    const data = await response.json();
+    if (!data.ok) { status.textContent = data.error || '提取失败'; return; }
+    document.getElementById('answers').value = data.text;
+    status.textContent = `已提取 ${data.count} 条候选；请逐条核对题号与条件`;
+    if (data.warnings && data.warnings.length) {
+      status.textContent += `（${data.warnings.length} 条警告，见下方控制台）`;
+      console.warn(data.warnings);
+    }
+  } catch (error) {
+    status.textContent = '提取失败：' + error;
+  }
+});
+</script>
+{% endblock %}

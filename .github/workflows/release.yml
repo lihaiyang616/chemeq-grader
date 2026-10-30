@@ -1,0 +1,45 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.13.5"
+          enable-cache: true
+      - run: uv sync --frozen
+      - run: uv run pyinstaller packaging/chemeq.spec --noconfirm
+      - name: Assemble portable zip
+        shell: pwsh
+        run: |
+          $version = $env:GITHUB_REF_NAME.TrimStart('v')
+          $name = "chemeq-grader-$version-windows-x64"
+          $dir = "release/$name"
+          New-Item -ItemType Directory -Force -Path $dir | Out-Null
+          Copy-Item -Recurse -Force dist/chemeq/* $dir
+          Copy-Item packaging/启动智批.bat $dir
+          Copy-Item packaging/诊断.bat $dir
+          Copy-Item packaging/首次使用.txt $dir
+          Copy-Item LICENSE $dir
+          Copy-Item README.md $dir
+          Copy-Item -Recurse integrations $dir
+          Copy-Item -Recurse docs $dir
+          Compress-Archive -Path "$dir/*" -DestinationPath "release/$name.zip" -Force
+          $hash = (Get-FileHash "release/$name.zip" -Algorithm SHA256).Hash
+          "$hash  $name.zip" | Out-File "release/$name.zip.sha256" -Encoding ascii
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release/*.zip
+            release/*.sha256
+          generate_release_notes: true

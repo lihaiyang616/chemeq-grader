@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}学生名单 · ChemEq 智批{% endblock %}
+{% block content %}
+<h1>学生名单</h1>
+<p class="lead">导入后，程序会优先按学号、再按姓名匹配卷面信息；匹配不上会进“待确认”，不会乱登记。</p>
+
+<section class="panel">
+  <h2>导入名单</h2>
+  <form method="post" action="/students/import" enctype="multipart/form-data" class="inline-form">
+    <input type="file" name="file" accept=".csv,.xlsx,.xlsm" required>
+    <button class="button primary" type="submit">导入</button>
+  </form>
+  <p class="muted small">支持 CSV/Excel；列名包含“姓名/name”、“学号/no”、“班级/class”。没有表头时按 姓名、学号、班级 三列读取。</p>
+</section>
+
+<section class="panel">
+  <div class="panel-head"><h2>名单</h2><span class="muted small">{{ students|length }} 人</span></div>
+  {% if students %}
+  <table>
+    <thead><tr><th>学号</th><th>姓名</th><th>班级</th></tr></thead>
+    <tbody>
+      {% for student in students %}
+      <tr><td>{{ student.no }}</td><td>{{ student.name }}</td><td>{{ student.class_name }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">还没有名单；不导入也能用，程序会按卷面姓名/学号自动建学生。</p>
+  {% endif %}
+</section>
+{% endblock %}
