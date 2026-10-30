@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import io
+import json
 from pathlib import Path
 
 from fastapi.testclient import TestClient
@@ -180,3 +181,14 @@ def test_settings_save_and_test(tmp_path: Path, monkeypatch) -> None:
         assert cfg.api_key == "sk-test-only"
         assert cfg.model == "deepseek-flash"
         assert cfg.strict_scoring is True
+
+
+def test_old_config_limits_are_raised(tmp_path: Path) -> None:
+    home = tmp_path / "old-home"
+    home.mkdir()
+    (home / "config.json").write_text(
+        json.dumps({"max_batch": 30, "max_tokens": 2000}), encoding="utf-8"
+    )
+    cfg = load_config(home)
+    assert cfg.max_batch >= 120
+    assert cfg.max_tokens >= 3000

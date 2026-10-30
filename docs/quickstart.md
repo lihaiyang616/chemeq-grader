@@ -2,7 +2,7 @@
 
 ## 一、老师用（Windows 免安装）
 
-1. 下载 Release 的 `chemeq-grader-0.1.1-windows-x64.zip`，解压到普通文件夹（例如 `D:\智批`）。不要直接在压缩包里运行。
+1. 下载 Release 的 `chemeq-grader-0.1.2-windows-x64.zip`，解压到普通文件夹（例如 `D:\智批`）。不要直接在压缩包里运行。
 2. 双击 `启动智批.bat`。浏览器会自动打开 `http://127.0.0.1:8765`。
 3. 点右上角“设置”：
    - 模型名：`deepseek-flash`

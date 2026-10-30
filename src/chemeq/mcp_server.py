@@ -30,7 +30,7 @@ from .core.roster import import_roster
 
 server = MCPServer(
     "chemeq",
-    version="0.1.1",
+    version="0.1.2",
     instructions=(
         "ChemEq Grader：本地化学方程式批改。先 list_worksheets 找到作业；"
         "grade_folder 批改一个文件夹里的学生作业照片；worksheet_report 导出 Excel/HTML。"

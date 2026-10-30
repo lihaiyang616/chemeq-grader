@@ -151,6 +151,18 @@ def load_config(home: Path | str | None = None) -> Config:
     if not cfg.mobile_token:
         cfg.mobile_token = secrets.token_urlsafe(18)
 
+    # Older config files (0.1.0) saved the old 30-image batch limit.  The
+    # whole-class workflow needs room for ~80 pages, so clamp operational
+    # limits upward instead of making the teacher edit config.json.
+    try:
+        cfg.max_batch = max(120, int(cfg.max_batch or 120))
+    except (TypeError, ValueError):
+        cfg.max_batch = 120
+    try:
+        cfg.max_tokens = max(3000, int(cfg.max_tokens or 3000))
+    except (TypeError, ValueError):
+        cfg.max_tokens = 3000
+
     for directory in (cfg.data_dir, cfg.uploads_dir, cfg.reports_dir, cfg.logs_dir):
         directory.mkdir(parents=True, exist_ok=True)
 

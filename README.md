@@ -28,7 +28,7 @@
 
 ## 快速开始（老师版）
 
-1. 下载 Release 里的 `chemeq-grader-0.1.1-windows-x64.zip`，解压到 `D:\智批`。
+1. 下载 Release 里的 `chemeq-grader-0.1.2-windows-x64.zip`，解压到 `D:\智批`。
 2. 双击 `启动智批.bat`，浏览器打开 `http://127.0.0.1:8765`。
 3. 设置里填 DeepSeek API Key（Base URL：`https://api.deepseek.com`，模型：`deepseek-flash`），点“测试当前模型”。
 4. 新建作业，把标准答案逐行粘贴进去：
