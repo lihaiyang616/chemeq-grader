@@ -18,6 +18,7 @@ from chemeq.core.grade import (
 from chemeq.core.report import build_report, export_html, export_xlsx
 from chemeq.core.roster import import_roster, match_student
 from chemeq.models import TranscribedEquation, TranscribedStudent, Transcription
+from chemeq.web import routes as web_routes
 from chemeq.web.app import create_app
 
 
@@ -131,3 +132,51 @@ def test_web_routes_and_mobile_upload(tmp_path: Path) -> None:
         assert response.status_code == 200, response.text
         payload = response.json()
         assert payload["ok"] and payload["submission_ids"]
+
+
+def test_batch_upload_groups_by_page_count(tmp_path: Path) -> None:
+    cfg = make_home(tmp_path)
+    ensure_demo(cfg)
+    app = create_app(cfg, start_queue=False)
+    with TestClient(app) as client:
+        files = []
+        for index in range(4):
+            buffer = io.BytesIO()
+            Image.new("RGB", (120, 120), "white").save(buffer, format="JPEG")
+            files.append(("files", (f"page-{index}.jpg", buffer.getvalue(), "image/jpeg")))
+        response = client.post(
+            f"/m/{cfg.mobile_token}/upload",
+            data={"worksheet_id": "1", "mode": "batch", "pages_per_student": "2"},
+            files=files,
+        )
+        assert response.status_code == 200, response.text
+        payload = response.json()
+        assert payload["mode"] == "batch"
+        assert len(payload["submission_ids"]) == 2
+        for submission_id in payload["submission_ids"]:
+            assert len(db.get_pages(cfg.db_path, submission_id)) == 2
+
+
+def test_settings_save_and_test(tmp_path: Path, monkeypatch) -> None:
+    cfg = make_home(tmp_path)
+    app = create_app(cfg, start_queue=False)
+    monkeypatch.setattr(
+        web_routes,
+        "test_connection",
+        lambda _cfg: {"ok": True, "latency_ms": 12},
+    )
+    with TestClient(app) as client:
+        response = client.post(
+            "/settings/test",
+            data={
+                "model": "deepseek-flash",
+                "base_url": "https://api.deepseek.com",
+                "api_key": "sk-test-only",
+                "strict_scoring": "1",
+            },
+            follow_redirects=False,
+        )
+        assert response.status_code == 303
+        assert cfg.api_key == "sk-test-only"
+        assert cfg.model == "deepseek-flash"
+        assert cfg.strict_scoring is True

@@ -54,7 +54,7 @@ class Config:
     max_concurrency: int = 3
     budget_cny: float = 5.0
     max_upload_mb: int = 20
-    max_batch: int = 30
+    max_batch: int = 120
     max_pages: int = 10
     strict_scoring: bool = True
     admin_token: str = ""

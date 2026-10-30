@@ -1,3 +1,3 @@
 """ChemEq Grader: photograph high-school chemistry equations and grade them."""
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"

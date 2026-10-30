@@ -23,17 +23,12 @@
     </label>
     <div class="form-actions">
       <button class="button primary" type="submit">保存设置</button>
+      <button class="button" type="submit" formaction="/settings/test">保存并测试</button>
     </div>
-    <p class="muted small">保存后下一份批改生效。修改模型/Key 不需要重启程序。</p>
+    <p class="muted small">“保存并测试”会先保存上面的 Key/模型，再发一句文本测试；测试不传学生图片，花费可以忽略。</p>
   </form>
 
   <div class="panel">
-    <h2>连接测试</h2>
-    <form method="post" action="/settings/test" class="inline">
-      <button class="button" type="submit">测试当前模型</button>
-    </form>
-    <p class="muted small">测试只发一句文本，不传学生图片，花费可以忽略。</p>
-    <hr>
     <h2>手机入口</h2>
     <div class="mobile-url">{{ mobile_url }}</div>
     <p class="muted small">电脑和手机连同一个 Wi-Fi。若手机打不开：先允许 Windows 防火墙，或把电脑连到手机热点。</p>

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "chemeq-grader"
-version = "0.1.0"
+version = "0.1.1"
 description = "拍照批改高中化学方程式，按姓名/学号登记错题并生成报告"
 readme = "README.md"
 requires-python = ">=3.12"

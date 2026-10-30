@@ -31,7 +31,7 @@ def create_app(cfg: Config, *, start_queue: bool = True) -> FastAPI:
             if queue is not None:
                 queue.stop()
 
-    app = FastAPI(title="ChemEq Grader", version="0.1.0", lifespan=lifespan)
+    app = FastAPI(title="ChemEq Grader", version="0.1.1", lifespan=lifespan)
     app.state.cfg = cfg
     app.state.templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
     app.state.queue = GradeQueue(cfg) if start_queue else None

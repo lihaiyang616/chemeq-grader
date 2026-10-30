@@ -19,7 +19,7 @@ from fastapi.responses import (
     Response,
 )
 
-from .. import db
+from .. import __version__, db
 from ..config import Config
 from ..core.answer_key import extract_docx_candidates, parse_answer_key
 from ..core.demo import ensure_demo
@@ -425,6 +425,14 @@ def settings_save(
 ):
     _require_local(request)
     cfg = _cfg(request)
+    _apply_settings(cfg, model, base_url, api_key, strict_scoring)
+    cfg.save()
+    return _redirect("/settings", "设置已保存（下一份批改生效）")
+
+
+def _apply_settings(
+    cfg: Config, model: str, base_url: str, api_key: str, strict_scoring: str
+) -> None:
     if model.strip():
         cfg.model = model.strip()
     if base_url.strip():
@@ -432,18 +440,24 @@ def settings_save(
     if api_key.strip():
         cfg.api_key = api_key.strip()
     cfg.strict_scoring = bool(strict_scoring)
-    cfg.save()
-    return _redirect("/settings", "设置已保存（下一份批改生效）")
 
 
 @router.post("/settings/test")
-def settings_test(request: Request):
+def settings_test(
+    request: Request,
+    model: str = Form(""),
+    base_url: str = Form(""),
+    api_key: str = Form(""),
+    strict_scoring: str = Form(""),
+):
     _require_local(request)
     cfg = _cfg(request)
+    _apply_settings(cfg, model, base_url, api_key, strict_scoring)
+    cfg.save()
     result = test_connection(cfg)
     if result.get("ok"):
-        return _redirect("/settings", f"连接成功（{result.get('latency_ms')} ms）")
-    return _redirect("/settings", f"连接失败：{result.get('error')}")
+        return _redirect("/settings", f"连接成功（{result.get('latency_ms')} ms），设置已保存")
+    return _redirect("/settings", f"连接失败：{result.get('error')}（设置已保存，请修正 Key 后再测）")
 
 
 @router.get("/students", response_class=HTMLResponse)
@@ -497,7 +511,7 @@ def health(request: Request):
     counts = db.worksheet_counts(cfg.db_path)
     return {
         "ok": True,
-        "version": "0.1.0",
+        "version": __version__,
         "model": cfg.model,
         "has_key": bool(cfg.api_key),
         "counts": counts,
@@ -548,6 +562,8 @@ async def mobile_upload(
     request: Request,
     token: str,
     worksheet_id: int = Form(...),
+    mode: str = Form("each"),
+    pages_per_student: int = Form(2),
     same_student: bool = Form(False),
     files: list[UploadFile] = File(...),
 ):
@@ -577,35 +593,63 @@ async def mobile_upload(
     if not processed:
         return JSONResponse({"ok": False, "error": "照片处理失败"}, status_code=400)
 
+    mode = (mode or "each").strip().lower()
+    if mode not in {"batch", "same", "each"}:
+        mode = "each"
+    if same_student:
+        mode = "same"
+
     queue = request.app.state.queue
     submission_ids: list[int] = []
-    if same_student:
-        hashes = [sha256(data).hexdigest() for data in processed]
+    created_count = 0
+
+    def create_group(chunk: list[bytes]) -> tuple[int, bool]:
+        hashes = [sha256(data).hexdigest() for data in chunk]
         bundle = sha256("".join(hashes).encode("ascii")).hexdigest()
-        first_path, _ = _save_processed(cfg, processed[0])
+        first_path, _ = _save_processed(cfg, chunk[0])
         submission_id, created = db.create_submission(
             cfg.db_path, worksheet_id, str(first_path), bundle
         )
         if created:
-            for index, data in enumerate(processed[1:], start=2):
+            for index, data in enumerate(chunk[1:], start=2):
                 page_path, page_hash = _save_processed(cfg, data)
                 db.add_page(cfg.db_path, submission_id, index, str(page_path), page_hash)
             if queue is not None:
                 queue.submit(submission_id)
-        submission_ids.append(submission_id)
+        else:
+            # Re-uploading the same page(s) after a failed run should retry,
+            # not silently leave the submission stuck in "failed".
+            existing = db.get_submission(cfg.db_path, submission_id)
+            if existing and existing.get("status") in {"failed", "interrupted"}:
+                db.update_submission(cfg.db_path, submission_id, status="queued", error="")
+                if queue is not None:
+                    queue.submit(submission_id)
+        return submission_id, created
+
+    if mode == "same":
+        groups = [processed]
+    elif mode == "batch":
+        size = max(1, min(int(pages_per_student or 2), cfg.max_pages))
+        groups = [processed[index : index + size] for index in range(0, len(processed), size)]
     else:
-        for data in processed:
-            page_path, page_hash = _save_processed(cfg, data)
-            submission_id, created = db.create_submission(
-                cfg.db_path, worksheet_id, str(page_path), page_hash
-            )
-            if created and queue is not None:
-                queue.submit(submission_id)
-            submission_ids.append(submission_id)
+        groups = [[data] for data in processed]
+
+    for chunk in groups:
+        if not chunk:
+            continue
+        submission_id, created = create_group(chunk)
+        submission_ids.append(submission_id)
+        if created:
+            created_count += 1
+
     return {
         "ok": True,
         "submission_ids": submission_ids,
-        "created": len(submission_ids),
+        "created": created_count,
+        "mode": mode,
+        "pages_per_student": max(1, min(int(pages_per_student or 2), cfg.max_pages))
+        if mode == "batch"
+        else None,
     }
 
 

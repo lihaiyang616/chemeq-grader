@@ -2,7 +2,7 @@
 
 ## 一、老师用（Windows 免安装）
 
-1. 下载 Release 的 `chemeq-grader-0.1.0-windows-x64.zip`，解压到普通文件夹（例如 `D:\智批`）。不要直接在压缩包里运行。
+1. 下载 Release 的 `chemeq-grader-0.1.1-windows-x64.zip`，解压到普通文件夹（例如 `D:\智批`）。不要直接在压缩包里运行。
 2. 双击 `启动智批.bat`。浏览器会自动打开 `http://127.0.0.1:8765`。
 3. 点右上角“设置”：
    - 模型名：`deepseek-flash`
@@ -47,7 +47,7 @@ uv run chemeq report --worksheet 1 --out 报告.xlsx
 uv run chemeq report --worksheet 1 --html --out 报告.html
 ```
 
-`--worksheet` 可以是 ID 或作业标题。文件夹里的 jpg/png/webp/heic 会按文件名排序，一张 = 一位学生；多页学生请用手机端的“同一学生的多页”。
+`--worksheet` 可以是 ID 或作业标题。文件夹里的 jpg/png/webp/heic 会按文件名排序，一张 = 一位学生；多页学生请用手机端的“整摞上传，每 N 页算一位学生”或“同一学生的多页”。
 
 ## 五、更新
 

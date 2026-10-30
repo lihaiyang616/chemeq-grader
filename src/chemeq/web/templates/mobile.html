@@ -34,11 +34,17 @@
       </label>
       <div class="mobile-file-hint" id="file-count">还没有选择照片</div>
 
-      <label class="mobile-check">
-        <input id="same-student" type="checkbox">
-        这些是同一位学生的多页
+      <label class="mobile-label">怎么分？
+        <select id="mode">
+          <option value="batch" selected>整摞上传，每 N 页算一位学生（多页试卷推荐）</option>
+          <option value="same">这些照片是同一位学生的多页</option>
+          <option value="each">每张照片算一位学生</option>
+        </select>
       </label>
-      <p class="mobile-note">不勾选时：每张照片算一位学生。勾选后：所有照片合成一份多页作业。</p>
+      <label class="mobile-label" id="pages-wrap">每份几页？
+        <input id="pages-per-student" type="number" min="1" max="10" value="2">
+      </label>
+      <p class="mobile-note">整摞上传时，请按学生顺序选照片：张三第 1 页、第 2 页，李四第 1 页、第 2 页……；每 N 页合成一份。最后不足 N 页的会单独成一份。</p>
 
       <button id="upload-button" class="mobile-button" type="submit">上传并开始批改</button>
       <div id="upload-message" class="mobile-message"></div>
